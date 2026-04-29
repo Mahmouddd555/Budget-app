@@ -6,9 +6,17 @@ public class Category {
     private String name;
     private String type;
 
-    public Category(int id, String name, String type) {}
+    public Category(int id, String name, String type) {
+        this.id =id;
+        this.name = name;
+        this.type = type;
+    }
 
-    public String getName() {}
+    public String getName() {
+        return name;
+    }
 
-    public String getType() {}
+    public String getType() {
+        return type;
+    }
 }

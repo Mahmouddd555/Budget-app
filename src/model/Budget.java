@@ -1,17 +1,29 @@
 package model;
 
 public class Budget {
-
     private int id;
-    private Category category;
-    private double limit;
-    private double spent;
+    private int userId;
+    private double amount;
+    private String category;
 
-    public Budget(int id, Category category, double limit) {}
+    public Budget(int id, int userId, double amount, String category) {
+        this.id = id;
+        this.userId = userId;
+        this.amount = amount;
+        this.category = category;
+    }
 
-    public void addExpense(double amount) {}
+    public Budget(int userId, double amount, String category) {
+        this.userId = userId;
+        this.amount = amount;
+        this.category = category;
+    }
 
-    public boolean isExceeded() {}
+    public int getId() { return id; }
+    public int getUserId() { return userId; }
+    public double getAmount() { return amount; }
+    public String getCategory() { return category; }
 
-    public double getRemaining() {}
+    public void setAmount(double amount) { this.amount = amount; }
+    public void setCategory(String category) { this.category = category; }
 }

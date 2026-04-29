@@ -13,5 +13,7 @@ public class Notification {
 
     public void markAsRead() {}
 
-    public String getMessage() {}
+    public String getMessage() {
+        return message;
+    }
 }

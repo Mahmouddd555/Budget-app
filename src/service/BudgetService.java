@@ -1,20 +1,39 @@
 package service;
 
 import model.Budget;
-import model.Transaction;
-import model.User;
+// import model.Transaction;
+// import model.User;
+import database.BudgetDAO;
 
 import java.util.List;
 
+
 public class BudgetService {
+    private BudgetDAO budgetDAO;
 
-    public void createBudget(User user, Budget budget) {}
+    public BudgetService() {
+        this.budgetDAO = new BudgetDAO();
+    }
 
-    public void updateBudget(Budget budget, Transaction transaction) {}
+    public void addBudget(Budget budget) {
+        if (budget.getAmount() <= 0) {
+            throw new IllegalArgumentException("Budget must be positive");
+        }
+        budgetDAO.insertBudget(budget);
+    }
 
-    public double calculateRemaining(Budget budget) {}
+    public List<Budget> getUserBudgets(int userId) {
+        return budgetDAO.getBudgetsByUserId(userId);
+    }
 
-    public boolean checkBudgetExceeded(Budget budget) {}
+    public void updateBudget(Budget budget) {
+        if (budget.getAmount() <= 0) {
+            throw new IllegalArgumentException("Invalid amount");
+        }
+        budgetDAO.updateBudget(budget);
+    }
 
-    public List<Budget> getUserBudgets(User user) {}
+    public void deleteBudget(int id) {
+        budgetDAO.deleteBudget(id);
+    }
 }

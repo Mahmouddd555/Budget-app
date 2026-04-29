@@ -17,13 +17,19 @@ public class User {
 
     public void addTransaction(Transaction transaction) {}
 
-    public List<Transaction> getTransactions() {}
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
 
     public void addBudget(Budget budget) {}
 
     public void addGoal(Goal goal) {}
 
-    public String getEmail() {}
+    public String getEmail() {
+        return email;
+    }
 
-    public String getPassword() {}
+    public String getPassword() {
+        return password;
+    }
 }

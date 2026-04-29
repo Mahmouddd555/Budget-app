@@ -12,9 +12,13 @@ public abstract class Transaction {
 
     public Transaction(int id, double amount, LocalDate date, String description, Category category) {}
 
-    public double getAmount() {}
+    public double getAmount() {
+        return amount;
+    }
 
-    public Category getCategory() {}
+    public Category getCategory() {
+        return category;
+    }
 
     public abstract String getType();
 }
