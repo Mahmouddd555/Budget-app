@@ -67,13 +67,14 @@ These diagrams were used as a blueprint for implementation.
 ---
 
 ## 📂 Project Structure
+```
 src/
 ├── model/
 ├── service/
 ├── controller/
 ├── database/
 └── ui/
-
+```
 
 ---
 
