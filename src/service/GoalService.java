@@ -1,32 +1,32 @@
 package service;
 
 import model.Goal;
-import database.GoalDAO;
 
 import java.util.List;
 
-public class GoalService {
-    private GoalDAO goalDAO;
+import database.GoalDAO;
 
-    public GoalService() {
-        this.goalDAO = new GoalDAO();
-    }
+public class GoalService {
+
+    private GoalDAO dao= new GoalDAO();
 
     public void createGoal( Goal goal) {
-        if (goal.getTargetAmount() <= 0) {
-            throw new IllegalArgumentException("Target must be positive");
+        dao.save(goal);
+    }
+
+    public void addProgress(int id, double amount) {
+        Goal goal = dao.findById(id);
+        if (goal != null) {
+            goal.setCurrentAmount(goal.getCurrentAmount() + amount);
+            dao.update(goal);
         }
-
-        goalDAO.save(goal);
     }
 
-    public void updateProgress(Goal goal, double amount) {}
-
-    public double calculateProgress(Goal goal) {
-        return goal.getProgress();
+    public Goal getGoalById(int Id) {
+        return dao.findById(Id);
     }
 
-    public List<Goal> getUserGoals(int userId) {
-        return goalDAO.findByUserId(userId);
+    public List<Goal> getAllGoals() {
+        return dao.getAllGoals();
     }
 }

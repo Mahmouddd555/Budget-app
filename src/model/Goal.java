@@ -5,20 +5,18 @@ public class Goal {
     private int id;
     private String name;
     private double targetAmount;
-    private double currentAmount;
+    private double currentAmount = 0;
 
 
-    public Goal(int id, String name, double targetAmount, double currentAmount) {
-        this.id =id;
-        this.name=name;
-        this.targetAmount=targetAmount;
-        this.currentAmount=currentAmount;
-    }
-    public Goal(int userId, String name, double targetAmount) {
-        this.id = userId;
+    
+    public Goal(int id, String name, double targetAmount) {
+        this.id = id;
         this.name = name;
         this.targetAmount = targetAmount;
-        this.currentAmount = 0;
+    }
+
+    public void setCurrentAmount(double currentAmount) {
+        this.currentAmount = currentAmount;
     }
 
     public void updateProgress(double amount) {

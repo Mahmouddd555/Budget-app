@@ -4,10 +4,12 @@ import java.time.LocalDate;
 
 public class ExpenseTransaction extends Transaction {
 
-    public ExpenseTransaction(int id, double amount, LocalDate date, String description, Category category) {
-        super(id, amount, date, description, category);
+    public ExpenseTransaction(int userId, double amount, LocalDate date, String description, String category) {
+        super(userId, amount, date, description, category);
     }
 
     @Override
-    public String getType() {}
+    public String getType() {
+        return "Expense";
+    }
 }

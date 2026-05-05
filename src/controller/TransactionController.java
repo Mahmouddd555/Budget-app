@@ -1,11 +1,20 @@
 package controller;
 
-import model.Transaction;
-import model.User;
-import java.util.List;
+import model.ExpenseTransaction;
+import model.IncomeTransaction;
+import service.TransactionService;
+
+import java.time.LocalDate;
 
 public class TransactionController {
-    public void addTransaction(User user, Transaction transaction) {}
-    public List<Transaction> getUserTransactions(User user) {}
-    public void deleteTransaction(User user, int transactionId) {}
+    
+    private TransactionService service = new TransactionService();
+
+    public void addIncome(int id, double amount, LocalDate date, String description, String category) {
+        service.createTransaction(new IncomeTransaction(id,amount,date,description,category));
+    }
+
+    public void addExpense(int id, double amount, LocalDate date, String description, String category) {
+        service.createTransaction(new ExpenseTransaction(id,amount,date,description,category));
+    }
 }

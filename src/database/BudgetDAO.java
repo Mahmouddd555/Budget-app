@@ -6,23 +6,30 @@ import java.util.stream.Collectors;
 
 import model.Budget;
 
+
 public class BudgetDAO {
     
-    final List<Budget> usersBudgets = List.of();
-
-    public void insertBudget(Budget budget) {
-        usersBudgets.add(budget);
+    public void addBudget(Budget budget) {
+        Database.budgets.add(budget);
     }
 
     public List<Budget> getBudgetsByUserId(int userId) {
-        return usersBudgets.stream().filter(budget-> budget.getUserId()==userId).collect(Collectors.toList());
+        return Database.budgets.stream().filter(budget -> budget.getId() == userId).collect(Collectors.toList());
     }
 
     public void updateBudget(Budget budget) {
-        
+        Database.budgets.remove(budget);
+        Database.budgets.add(budget);
     }
 
     public void deleteBudget(int id) {
-        
+        Budget budget = Database.budgets.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
+        if (budget != null) {
+            Database.budgets.remove(budget);
+        }
+    }
+
+    public List<Budget> getAllBudgets() {
+        return Database.budgets;
     }
 }

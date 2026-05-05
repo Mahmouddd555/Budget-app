@@ -2,82 +2,44 @@ package database;
 
 import model.Goal;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GoalDAO {
+
     public void save(Goal goal) {
-        String sql = "INSERT INTO goals (user_id, name, target_amount, current_amount) VALUES (?, ?, ?, ?)";
-
-        try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, goal.getId());
-            stmt.setString(2, goal.getName());
-            stmt.setDouble(3, goal.getTargetAmount());
-            stmt.setDouble(4, goal.getCurrentAmount());
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        Database.goals.add(goal);
     }
     
-    public List<Goal> findByUserId(int userId) {
-        List<Goal> goals = new ArrayList<>();
-        String sql = "SELECT * FROM goals WHERE user_id = ?";
+    public Goal findById(int Id) {
 
-        try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                goals.add(new Goal(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDouble("target_amount"),
-                        rs.getDouble("current_amount")
-                ));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return goals;
+        return Database.goals.stream().filter(goal -> goal.getId() == Id).collect(Collectors.toList()).get(0);
     }
+
     public void update(Goal goal) {
-        String sql = "UPDATE goals SET current_amount = ? WHERE id = ?";
-
-        try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setDouble(1, goal.getCurrentAmount());
-            stmt.setInt(2, goal.getId());
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Goal existingGoal = Database.goals.stream().filter(g -> g.getId() == goal.getId()).findFirst().orElse(null);
+        if (existingGoal != null) {
+            Database.goals.remove(existingGoal);
+            Database.goals.add(goal);
         }
     }
 
     public void deleteGoal(int id) {
-        String sql = "DELETE FROM goals WHERE id = ?";
-
-        try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Goal goal = Database.goals.stream().filter(g -> g.getId() == id).findFirst().orElse(null);
+        if (goal != null) {
+            Database.goals.remove(goal);
         }
-    
+    }
+
+    public void setCurrentAmount(int id, double amount) {
+        Goal goal = Database.goals.stream().filter(g -> g.getId() == id).findFirst().orElse(null);
+        if (goal != null) {
+            goal.setCurrentAmount(amount);
+            update(goal);
+        }
+    }
+
+    public List<Goal> getAllGoals() {
+        return Database.goals;
     }
 }

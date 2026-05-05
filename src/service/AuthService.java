@@ -1,12 +1,12 @@
 package service;
 
-import model.User;
+import database.UserDAO;
 
 public class AuthService {
 
-    public User register(String name, String email, String password) {}
-
-    public User login(String email, String password) {}
-
-    public boolean validateCredentials(String email, String password) {}
+    private UserDAO userDAO = new UserDAO();
+    public boolean login(String user, String pass) {
+        return userDAO.getAll().stream()
+            .anyMatch(u -> u.getName().equals(user) && u.getPassword().equals(pass));
+    }
 }

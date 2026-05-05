@@ -9,11 +9,25 @@ public class Notification {
     private boolean isRead;
     private LocalDateTime timestamp;
 
-    public Notification(int id, String message) {}
+    public Notification(int id, String message) {
+        this.id = id;
+        this.message = message;
+        this.isRead = false;
+        this.timestamp = LocalDateTime.now();
+    }
 
-    public void markAsRead() {}
+    public void markAsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
 
     public String getMessage() {
         return message;
     }
+    public boolean isRead() {
+        return isRead;
+    }
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+    public int getId() { return id; }
 }

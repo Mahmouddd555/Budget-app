@@ -1,33 +1,21 @@
 package database;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+import model.Budget;
+import model.Goal;
+import model.Notification;
+import model.Transaction;
+import model.User;
 
 public class Database {
-    private static Database instance;
-    private Connection connection;
+    public static List<User> users = new ArrayList<>();
+    public static List<Transaction> transactions = new ArrayList<>();
+    public static List<Budget> budgets = new ArrayList<>();
+    public static List<Goal> goals = new ArrayList<>();
+    public static List<Notification> notifications = new ArrayList<>();
+    
 
-    private final String URL = "jdbc:mysql://localhost:3306/budget_db";
-    private final String USER = "root";
-    private final String PASSWORD = "";
-
-    private Database() {
-        try {
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static Database getInstance() {
-        if (instance == null) {
-            instance = new Database();
-        }
-        return instance;
-    }
-
-    public Connection getConnection() {
-        return connection;
-    }
 }

@@ -4,10 +4,12 @@ import java.time.LocalDate;
 
 public class IncomeTransaction extends Transaction {
 
-    public IncomeTransaction(int id, double amount, LocalDate date, String description, Category category) {
+    public IncomeTransaction(int id, double amount, LocalDate date, String description, String category) {
         super(id, amount, date, description, category);
     }
 
     @Override
-    public String getType() {}
+    public String getType() {
+        return "Income";
+    }
 }
