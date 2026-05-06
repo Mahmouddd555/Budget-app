@@ -39,7 +39,9 @@ public class GoalDAO {
         }
     }
 
-    public List<Goal> getAllGoals() {
-        return Database.goals;
+    public List<Goal> findByUserId(int userId) {
+        return Database.goals.stream()
+                .filter(goal -> goal.getId() == userId)
+                .collect(Collectors.toList());
     }
 }

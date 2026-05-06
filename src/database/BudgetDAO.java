@@ -29,7 +29,4 @@ public class BudgetDAO {
         }
     }
 
-    public List<Budget> getAllBudgets() {
-        return Database.budgets;
-    }
 }

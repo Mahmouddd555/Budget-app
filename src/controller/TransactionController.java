@@ -2,9 +2,11 @@ package controller;
 
 import model.ExpenseTransaction;
 import model.IncomeTransaction;
+import model.User;
+import model.Transaction;
 import service.TransactionService;
-
 import java.time.LocalDate;
+import java.util.List;
 
 public class TransactionController {
     
@@ -16,5 +18,9 @@ public class TransactionController {
 
     public void addExpense(int id, double amount, LocalDate date, String description, String category) {
         service.createTransaction(new ExpenseTransaction(id,amount,date,description,category));
+    }
+
+    public List<Transaction> getUserTransactions(User user) {
+        return service.getTransactionsByUserId(user.getId());
     }
 }

@@ -1,6 +1,7 @@
 package controller;
 
 import model.Goal;
+import model.User;
 import service.GoalService;
 import java.util.List;
 
@@ -23,14 +24,16 @@ public class GoalController {
         System.out.println("Amount added to your goal!");
     }
 
-    public List<Goal> getMyGoals() {
-        return goalService.getAllGoals();
-    }
 
     public void checkGoalStatus(int id) {
         Goal goal = goalService.getGoalById(id);
         if (goal != null && goal.getCurrentAmount() >= goal.getTargetAmount()) {
             System.out.println("Congratulations! Goal " + goal.getName() + " achieved.");
         }
+    }
+
+    public List<Goal> getUserGoals(User user)
+    {
+        return goalService.getGoalsByUserId(user.getId());
     }
 }

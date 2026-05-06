@@ -1,12 +1,18 @@
 package controller;
 
+import model.User;
 import service.AuthService;
 
 public class AuthController {
 
-    private AuthService authService = new AuthService();
-    
-    public void handleLogin(String u, String p) {
-        if(authService.login(u, p)) System.out.println("Success");
+    private final AuthService authService = new AuthService();
+
+    public User handleLogin(String email, String password)
+    {
+        return authService.login(email, password);
+    }
+    public User handleRegister(String name, String email, String password, String currency, String language)
+    {
+        return authService.register(name, email, password, currency, language);
     }
 }
