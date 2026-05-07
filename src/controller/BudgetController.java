@@ -20,6 +20,10 @@ public class BudgetController {
         System.out.println("Budget added successfully for: " + month);
     }
 
+    public List<Budget> getAllBudgets() {
+        return budgetService.getBudgets();
+    }
+
     public void updateBudget(int id, double newLimit) {
         budgetService.updateBudget(id, newLimit);
     }

@@ -53,7 +53,7 @@ public class BudgetsScreen extends JFrame {
     // ─── viewBudgets() ───────────────────────────────────────────────────────
 
     private void viewBudgets() {
-        List<Budget> budgets = budgetController.getUserBudgets(currentUser);
+        List<Budget> budgets = budgetController.getAllBudgets();
 
         String[] columns = {"Category", "Budget Limit"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
@@ -136,7 +136,7 @@ public class BudgetsScreen extends JFrame {
     // ─── showProgress() ──────────────────────────────────────────────────────
 
     private void showProgress() {
-        List<Budget> budgets = budgetController.getUserBudgets(currentUser);
+        List<Budget> budgets = budgetController.getAllBudgets();
         List<Transaction> transactions = budgetController.getTransactionsByUserId(currentUser.getId());
 
         String[] columns = {"Category", "Budget", "Spent", "Left", "%", "Status"};

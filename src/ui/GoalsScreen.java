@@ -30,13 +30,22 @@ public class GoalsScreen extends JFrame {
         JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        JButton viewBtn     = new JButton("View Goals");
-        JButton addBtn      = new JButton("Add Goal");
+        JButton viewBtn = new JButton("View Goals");
+        JButton addBtn = new JButton("Add Goal");
         JButton progressBtn = new JButton("Add Progress");
 
-        viewBtn.addActionListener(e -> { frame.dispose(); viewGoals(); });
-        addBtn.addActionListener(e -> { frame.dispose(); addGoal(); });
-        progressBtn.addActionListener(e -> { frame.dispose(); addProgress(); });
+        viewBtn.addActionListener(e -> {
+            frame.dispose();
+            viewGoals();
+        });
+        addBtn.addActionListener(e -> {
+            frame.dispose();
+            addGoal();
+        });
+        progressBtn.addActionListener(e -> {
+            frame.dispose();
+            addProgress();
+        });
 
         panel.add(viewBtn);
         panel.add(addBtn);
@@ -52,13 +61,13 @@ public class GoalsScreen extends JFrame {
     private void viewGoals() {
         List<Goal> goals = goalController.getUserGoals(currentUser);
 
-        String[] columns = {"Goal", "Saved", "Target", "Progress", "Status"};
+        String[] columns = { "Goal", "Saved", "Target", "Progress", "Status" };
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
         for (Goal g : goals) {
             double progress = g.getProgress();
             String status = progress >= 100 ? "✔ Completed!" : String.format("%.1f%%", progress);
-            model.addRow(new Object[]{
+            model.addRow(new Object[] {
                     g.getName(),
                     String.format("$%.2f", g.getCurrentAmount()),
                     String.format("$%.2f", g.getTargetAmount()),
@@ -76,7 +85,10 @@ public class GoalsScreen extends JFrame {
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JButton backBtn = new JButton("Back");
-        backBtn.addActionListener(e -> { frame.dispose(); show(); });
+        backBtn.addActionListener(e -> {
+            frame.dispose();
+            show();
+        });
 
         frame.add(scrollPane, BorderLayout.CENTER);
         frame.add(backBtn, BorderLayout.SOUTH);
@@ -94,7 +106,7 @@ public class GoalsScreen extends JFrame {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JTextField nameField   = new JTextField();
+        JTextField nameField = new JTextField();
         JTextField targetField = new JTextField();
 
         panel.add(new JLabel("Goal name:"));
@@ -127,15 +139,17 @@ public class GoalsScreen extends JFrame {
             }
 
             int goalId = (int) System.currentTimeMillis();
-            goalController.addNewGoal(goalId, name, target);
+            goalController.addNewGoal(goalId, currentUser.getId(), name, target);
 
             int choice = JOptionPane.showConfirmDialog(frame,
                     "Goal '" + name + "' created!\n\nAdd another?",
                     "Success ✔", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
             frame.dispose();
-            if (choice == JOptionPane.YES_OPTION) addGoal();
-            else show();
+            if (choice == JOptionPane.YES_OPTION)
+                addGoal();
+            else
+                show();
         });
 
         panel.add(saveBtn);
@@ -169,8 +183,8 @@ public class GoalsScreen extends JFrame {
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JComboBox<String> goalBox    = new JComboBox<>(goalNames);
-        JTextField        amountField = new JTextField();
+        JComboBox<String> goalBox = new JComboBox<>(goalNames);
+        JTextField amountField = new JTextField();
 
         panel.add(new JLabel("Select goal:"));
         panel.add(goalBox);
@@ -210,8 +224,10 @@ public class GoalsScreen extends JFrame {
                         "Success ✔", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
                 frame.dispose();
-                if (choice == JOptionPane.YES_OPTION) addProgress();
-                else show();
+                if (choice == JOptionPane.YES_OPTION)
+                    addProgress();
+                else
+                    show();
 
             } catch (IllegalArgumentException ex) {
                 JOptionPane.showMessageDialog(frame,

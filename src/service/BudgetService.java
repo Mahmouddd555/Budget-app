@@ -18,12 +18,15 @@ public class BudgetService {
         budgetDAO.addBudget(budget);
     }
 
+    public java.util.List<Budget> getBudgets() {
+        return budgetDAO.getAllBudgets();
+    }
 
     public void updateBudget(int id, double newLimit) {
         if (newLimit <= 0) {
             throw new IllegalArgumentException("Budget limit must be greater than zero.");
         }
-        java.util.List<Budget> budgets =getBudgetsByUserId(id);
+        java.util.List<Budget> budgets = budgetDAO.getAllBudgets();
         for (Budget budget : budgets) {
             if (budget.getId() == id) {
                 budget.setAmount(newLimit);

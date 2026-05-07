@@ -3,16 +3,36 @@ package model;
 public class Goal {
 
     private int id;
+    private int userId;
     private String name;
     private double targetAmount;
     private double currentAmount = 0;
 
-
-    
-    public Goal(int id, String name, double targetAmount) {
+    public Goal(int id, int userId, String name, double targetAmount) {
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.targetAmount = targetAmount;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getTargetAmount() {
+        return targetAmount;
+    }
+
+    public double getCurrentAmount() {
+        return currentAmount;
     }
 
     public void setCurrentAmount(double currentAmount) {
@@ -32,12 +52,8 @@ public class Goal {
     }
 
     public double getProgress() {
-        if (targetAmount == 0) return 0;
+        if (targetAmount == 0)
+            return 0;
         return (currentAmount / targetAmount) * 100;
     }
-
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public double getTargetAmount() { return targetAmount; }
-    public double getCurrentAmount() { return currentAmount; }
 }

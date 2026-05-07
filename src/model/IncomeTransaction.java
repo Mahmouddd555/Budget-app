@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class IncomeTransaction extends Transaction {
 
-    public IncomeTransaction(int id, double amount, LocalDate date, String description, String category) {
-        super(id, amount, date, description, category);
+    public IncomeTransaction(int userId, double amount, LocalDate date, String description, String category) {
+        super(userId, amount, date, description, category);
     }
 
     @Override

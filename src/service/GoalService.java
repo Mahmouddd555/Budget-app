@@ -8,9 +8,9 @@ import database.GoalDAO;
 
 public class GoalService {
 
-    private GoalDAO dao = new GoalDAO();
+    private GoalDAO dao= new GoalDAO();
 
-    public void createGoal(Goal goal) {
+    public void createGoal( Goal goal) {
         dao.save(goal);
     }
 
@@ -26,8 +26,12 @@ public class GoalService {
         return dao.findById(Id);
     }
 
+    public List<Goal> getAllGoals() {
+        return dao.getAllGoals();
+    }
 
-    public List<Goal> getGoalsByUserId(int userId) {
+    public List<Goal> getGoalsByUserId(int userId)
+    {
         return dao.findByUserId(userId);
     }
 }

@@ -17,107 +17,131 @@ public class DashboardScreen {
     private final GoalController goalController;
 
     public DashboardScreen(User user) {
-        this.currentUser          = user;
+        this.currentUser = user;
         this.transactionController = new TransactionController();
-        this.budgetController      = new BudgetController();
-        this.goalController        = new GoalController();
+        this.budgetController = new BudgetController();
+        this.goalController = new GoalController();
     }
 
     public void show() {
+
         JFrame frame = new JFrame("Dashboard — " + currentUser.getName());
-        frame.setSize(500, 500);
+        frame.setSize(650, 600);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setBackground(new Color(245, 246, 250));
 
-        // ── Header ──────────────────────────────────────────────────────────
-        JLabel header = new JLabel("Welcome, " + currentUser.getName() + "!", SwingConstants.CENTER);
+        // Header
+        JLabel header = new JLabel("Welcome, " + currentUser.getName(), SwingConstants.CENTER);
         header.setFont(new Font("SansSerif", Font.BOLD, 18));
-        header.setBorder(BorderFactory.createEmptyBorder(16, 0, 8, 0));
 
-        // ── Summary panel ───────────────────────────────────────────────────
-        JPanel summaryPanel = new JPanel(new GridLayout(1, 3, 10, 0));
-        summaryPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 10, 20));
-
+        // Get user transactions
         List<Transaction> txs = transactionController.getUserTransactions(currentUser);
-        double income  = txs.stream().filter(t -> t.getType().equals("Income")).mapToDouble(Transaction::getAmount).sum();
-        double expense = txs.stream().filter(t -> t.getType().equals("Expense")).mapToDouble(Transaction::getAmount).sum();
+
+        // FIXED CALCULATION 🔥
+        double income = txs.stream()
+                .filter(t -> t.getUserId() == currentUser.getId())
+                .filter(t -> "Income".equalsIgnoreCase(t.getType()))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+
+        double expense = txs.stream()
+                .filter(t -> t.getUserId() == currentUser.getId())
+                .filter(t -> "Expense".equalsIgnoreCase(t.getType()))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+
         double balance = income - expense;
 
-        summaryPanel.add(makeSummaryCard("Balance",  String.format("$%.2f", balance),  new Color(33, 97, 140)));
-        summaryPanel.add(makeSummaryCard("Income",   String.format("+$%.2f", income),  new Color(39, 174, 96)));
-        summaryPanel.add(makeSummaryCard("Expenses", String.format("-$%.2f", expense), new Color(192, 57, 43)));
+        // Summary cards
+        JPanel summary = new JPanel(new GridLayout(1, 3, 10, 10));
+        summary.setBackground(new Color(245, 246, 250));
 
-        // ── Nav buttons ─────────────────────────────────────────────────────
-        JPanel navPanel = new JPanel(new GridLayout(2, 2, 12, 12));
-        navPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        summary.add(card("Balance", balance, new Color(41, 128, 185)));
+        summary.add(card("Income", income, new Color(39, 174, 96)));
+        summary.add(card("Expense", expense, new Color(192, 57, 43)));
 
-        JButton txBtn      = new JButton("Add Transaction");
-        JButton budgetBtn  = new JButton("Manage Budgets");
-        JButton goalsBtn   = new JButton("Manage Goals");
-        JButton logoutBtn  = new JButton("Logout");
+        // Buttons (رجّعنا كل حاجة زي ما كانت)
+        JButton addTx = new JButton("Add Transaction");
+        JButton budget = new JButton("Budgets");
+        JButton goals = new JButton("Goals");
+        JButton logout = new JButton("Logout");
 
-        txBtn.addActionListener(e -> new AddTransactionScreen(currentUser).show());
-        budgetBtn.addActionListener(e -> new BudgetsScreen(currentUser).show());
-        goalsBtn.addActionListener(e -> new GoalsScreen(currentUser).show());
-        logoutBtn.addActionListener(e -> {
+        style(addTx, new Color(41, 128, 185));
+        style(budget, new Color(39, 174, 96));
+        style(goals, new Color(52, 152, 219));
+        style(logout, new Color(231, 76, 60));
+
+        addTx.addActionListener(e -> new AddTransactionScreen(currentUser).show());
+        budget.addActionListener(e -> new BudgetsScreen(currentUser).show());
+        goals.addActionListener(e -> new GoalsScreen(currentUser).show());
+        logout.addActionListener(e -> {
             frame.dispose();
             new LoginScreen().show();
         });
 
-        for (JButton btn : new JButton[]{txBtn, budgetBtn, goalsBtn}) {
-            btn.setFont(new Font("SansSerif", Font.PLAIN, 14));
-            btn.setPreferredSize(new Dimension(0, 60));
-            navPanel.add(btn);
-        }
-        logoutBtn.setForeground(Color.RED);
-        navPanel.add(logoutBtn);
+        JPanel buttons = new JPanel(new GridLayout(2, 2, 10, 10));
+        buttons.setBackground(new Color(245, 246, 250));
+        buttons.add(addTx);
+        buttons.add(budget);
+        buttons.add(goals);
+        buttons.add(logout);
 
-        // ── Recent transactions ──────────────────────────────────────────────
-        JPanel recentPanel = new JPanel(new BorderLayout());
-        recentPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        // Recent transactions table
+        String[] cols = { "Date", "Desc", "Category", "Type", "Amount" };
 
-        JLabel recentLabel = new JLabel("Recent Transactions");
-        recentLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        Object[][] data = txs.stream()
+                .filter(t -> t.getUserId() == currentUser.getId())
+                .limit(5)
+                .map(t -> new Object[] {
+                        t.getDate(),
+                        t.getDescription(),
+                        t.getCategory(),
+                        t.getType(),
+                        t.getAmount()
+                })
+                .toArray(Object[][]::new);
 
-        String[] cols = {"Date", "Description", "Category", "Type", "Amount"};
-        Object[][] rows = txs.stream().limit(5).map(t -> new Object[]{
-                t.getDate(), t.getDescription(), t.getCategory(), t.getType(),
-                String.format("$%.2f", t.getAmount())
-        }).toArray(Object[][]::new);
+        JTable table = new JTable(data, cols);
+        table.setRowHeight(25);
 
-        JTable table = new JTable(rows, cols);
-        table.setEnabled(false);
-        recentPanel.add(recentLabel, BorderLayout.NORTH);
-        recentPanel.add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
 
-        // ── Assemble ────────────────────────────────────────────────────────
-        frame.setLayout(new BorderLayout(0, 0));
-        frame.add(header,       BorderLayout.NORTH);
-        frame.add(summaryPanel, BorderLayout.NORTH);
+        JPanel main = new JPanel(new BorderLayout(10, 10));
+        main.setBackground(new Color(245, 246, 250));
+        main.add(summary, BorderLayout.NORTH);
+        main.add(buttons, BorderLayout.CENTER);
+        main.add(scroll, BorderLayout.SOUTH);
 
-        JPanel center = new JPanel(new BorderLayout());
-        center.add(summaryPanel, BorderLayout.NORTH);
-        center.add(navPanel,     BorderLayout.CENTER);
-        center.add(recentPanel,  BorderLayout.SOUTH);
-
+        frame.setLayout(new BorderLayout());
         frame.add(header, BorderLayout.NORTH);
-        frame.add(center, BorderLayout.CENTER);
+        frame.add(main, BorderLayout.CENTER);
+
         frame.setVisible(true);
     }
 
-    private JPanel makeSummaryCard(String title, String value, Color color) {
-        JPanel card = new JPanel(new GridLayout(2, 1));
-        card.setBackground(color);
-        card.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    private JPanel card(String title, double value, Color color) {
 
-        JLabel titleLbl = new JLabel(title, SwingConstants.CENTER);
-        JLabel valueLbl = new JLabel(value, SwingConstants.CENTER);
-        titleLbl.setForeground(Color.WHITE);
-        valueLbl.setForeground(Color.WHITE);
-        valueLbl.setFont(new Font("SansSerif", Font.BOLD, 16));
+        JPanel p = new JPanel(new GridLayout(2, 1));
+        p.setBackground(color);
 
-        card.add(titleLbl);
-        card.add(valueLbl);
-        return card;
+        JLabel t = new JLabel(title, SwingConstants.CENTER);
+        JLabel v = new JLabel(String.format("%.2f", value), SwingConstants.CENTER);
+
+        t.setForeground(Color.WHITE);
+        v.setForeground(Color.WHITE);
+        v.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+        p.add(t);
+        p.add(v);
+
+        return p;
+    }
+
+    private void style(JButton b, Color c) {
+        b.setBackground(c);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setFont(new Font("SansSerif", Font.BOLD, 13));
     }
 }
