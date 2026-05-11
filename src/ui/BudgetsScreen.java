@@ -7,12 +7,16 @@ import model.User;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
-public class BudgetsScreen extends JFrame {
+public class BudgetsScreen {
 
-    private static final String[] CATEGORIES = {"Food", "Transport", "Bills", "Shopping", "Entertainment"};
+    private static final String[] CATEGORIES = {
+            "Food", "Transport", "Bills", "Shopping", "Entertainment"
+    };
 
     private final User currentUser;
     private final BudgetController budgetController;
@@ -22,163 +26,206 @@ public class BudgetsScreen extends JFrame {
         this.budgetController = new BudgetController();
     }
 
-    // ─── show() ──────────────────────────────────────────────────────────────
-
     public void show() {
-        JFrame frame = new JFrame("Budgets Management");
-        frame.setSize(380, 250);
+        JFrame frame = new JFrame("Masroofy — Budgets");
+        frame.setSize(1050, 680);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().setBackground(UITheme.BG);
+        frame.setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new GridLayout(4, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        frame.add(new TopNavBar(currentUser, SideBar.Page.BUDGETS), BorderLayout.NORTH);
 
-        JButton viewBtn     = new JButton("View Budgets");
-        JButton addBtn      = new JButton("Add Budget");
-        JButton progressBtn = new JButton("Show Progress");
+        JPanel body = new JPanel(new BorderLayout());
+        body.setBackground(UITheme.BG);
+        body.add(new SideBar(currentUser, SideBar.Page.BUDGETS), BorderLayout.WEST);
+        body.add(buildContent(frame), BorderLayout.CENTER);
 
-        viewBtn.addActionListener(e -> { frame.dispose(); viewBudgets(); });
-        addBtn.addActionListener(e -> { frame.dispose(); addBudget(); });
-        progressBtn.addActionListener(e -> { frame.dispose(); showProgress(); });
-
-        panel.add(viewBtn);
-        panel.add(addBtn);
-        panel.add(progressBtn);
-        panel.add(new JLabel(""));
-
-        frame.add(panel);
+        frame.add(body, BorderLayout.CENTER);
         frame.setVisible(true);
     }
 
-    // ─── viewBudgets() ───────────────────────────────────────────────────────
+    private JPanel buildContent(JFrame frame) {
 
-    private void viewBudgets() {
-        List<Budget> budgets = budgetController.getAllBudgets();
+        JPanel root = new JPanel();
+        root.setBackground(UITheme.BG);
+        root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+        root.setBorder(UITheme.pagePadding());
 
-        String[] columns = {"Category", "Budget Limit"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        JLabel title = UITheme.label("Budgets", UITheme.FONT_TITLE, UITheme.TEXT_PRIMARY);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        for (Budget b : budgets) {
-            if (b.getId() == currentUser.getId()) {
-                model.addRow(new Object[]{b.getCategory(), String.format("$%.2f", b.getAmount())});
-            }
-        }
+        JLabel sub = UITheme.label(
+                "Manage and track your spending limits",
+                UITheme.FONT_BODY,
+                UITheme.TEXT_SECONDARY);
+        sub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JTable table = new JTable(model);
-        JScrollPane scrollPane = new JScrollPane(table);
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.setOpaque(false);
+        topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
-        JFrame frame = new JFrame("My Budgets");
-        frame.setSize(400, 300);
-        frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        StyledButton addBtn = new StyledButton("➕ New Budget", StyledButton.Variant.PRIMARY);
+        addBtn.setPreferredSize(new Dimension(150, 38));
 
-        JButton backBtn = new JButton("Back");
-        backBtn.addActionListener(e -> { frame.dispose(); show(); });
+        addBtn.addActionListener(e -> addBudgetDialog(frame));
 
-        frame.add(scrollPane, BorderLayout.CENTER);
-        frame.add(backBtn, BorderLayout.SOUTH);
-        frame.setVisible(true);
-    }
+        topRow.add(addBtn, BorderLayout.EAST);
 
-    // ─── addBudget() ─────────────────────────────────────────────────────────
-
-    private void addBudget() {
-        JFrame frame = new JFrame("Add Budget");
-        frame.setSize(350, 220);
-        frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JComboBox<String> categoryBox = new JComboBox<>(CATEGORIES);
-        JTextField limitField = new JTextField();
-
-        panel.add(new JLabel("Category:"));
-        panel.add(categoryBox);
-        panel.add(new JLabel("Budget Limit ($):"));
-        panel.add(limitField);
-        panel.add(new JLabel(""));
-
-        JButton saveBtn = new JButton("Save");
-        saveBtn.addActionListener(e -> {
-            String category = (String) categoryBox.getSelectedItem();
-            double limit;
-            try {
-                limit = Double.parseDouble(limitField.getText().trim());
-                if (limit <= 0) {
-                    JOptionPane.showMessageDialog(frame,
-                            "Limit must be greater than zero.", "Invalid", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame,
-                        "Please enter a valid number.", "Invalid", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            budgetController.addBudget(currentUser.getId(), limit, category);
-
-            int choice = JOptionPane.showConfirmDialog(frame,
-                    "Budget added for " + category + "!\n\nAdd another?",
-                    "Success ✔", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-
-            frame.dispose();
-            if (choice == JOptionPane.YES_OPTION) addBudget();
-            else show();
-        });
-
-        panel.add(saveBtn);
-        frame.add(panel);
-        frame.setVisible(true);
-    }
-
-    // ─── showProgress() ──────────────────────────────────────────────────────
-
-    private void showProgress() {
+        // ── Data ──
         List<Budget> budgets = budgetController.getAllBudgets();
         List<Transaction> transactions = budgetController.getTransactionsByUserId(currentUser.getId());
 
-        String[] columns = {"Category", "Budget", "Spent", "Left", "%", "Status"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        String[] cols = { "Category", "Budget Limit", "Spent", "Remaining", "Usage", "Status" };
+
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
 
         for (Budget b : budgets) {
+
+            // SAFE user check (بدل id لو عندك userId استخدمه)
             if (b.getId() == currentUser.getId()) {
+
                 double spent = transactions.stream()
-                        .filter(t -> t.getCategory().equals(b.getCategory()) && t.getType().equals("Expense"))
+                        .filter(t -> t.getCategory() != null && t.getCategory().equals(b.getCategory()))
+                        .filter(t -> "Expense".equalsIgnoreCase(t.getType()))
                         .mapToDouble(Transaction::getAmount)
                         .sum();
-                double left    = b.getAmount() - spent;
-                double percent = (spent / b.getAmount()) * 100;
 
-                String status = percent > 100 ? "⚠ Over Budget!"
-                        : percent > 90 ? "⚠ Near Limit"
-                        : "✔ OK";
+                double left = b.getAmount() - spent;
+                double percent = b.getAmount() > 0 ? (spent / b.getAmount()) * 100 : 0;
 
-                model.addRow(new Object[]{
+                String status = percent > 100 ? "Over Budget"
+                        : percent > 90 ? "Near Limit"
+                                : "OK";
+
+                model.addRow(new Object[] {
                         b.getCategory(),
-                        String.format("$%.2f", b.getAmount()),
-                        String.format("$%.2f", spent),
-                        String.format("$%.2f", left),
+                        String.format("%,.2f EGP", b.getAmount()),
+                        String.format("%,.2f EGP", spent),
+                        String.format("%,.2f EGP", left),
                         String.format("%.1f%%", percent),
                         status
                 });
             }
         }
 
+        JTable table = buildTable(model);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(UITheme.BORDER));
+        scroll.getViewport().setBackground(UITheme.SURFACE);
+        scroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        root.add(title);
+        root.add(Box.createVerticalStrut(4));
+        root.add(sub);
+        root.add(Box.createVerticalStrut(16));
+        root.add(topRow);
+        root.add(Box.createVerticalStrut(14));
+        root.add(UITheme.label("Budget Progress", UITheme.FONT_H2, UITheme.TEXT_PRIMARY));
+        root.add(Box.createVerticalStrut(10));
+        root.add(scroll);
+
+        JScrollPane outer = new JScrollPane(root);
+        outer.setBorder(null);
+        outer.getViewport().setBackground(UITheme.BG);
+
+        JPanel wrap = new JPanel(new BorderLayout());
+        wrap.setBackground(UITheme.BG);
+        wrap.add(outer);
+
+        return wrap;
+    }
+
+    private JTable buildTable(DefaultTableModel model) {
         JTable table = new JTable(model);
-        JScrollPane scrollPane = new JScrollPane(table);
 
-        JFrame frame = new JFrame("Budget Progress");
-        frame.setSize(600, 300);
-        frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        table.setFont(UITheme.FONT_BODY);
+        table.setForeground(UITheme.TEXT_PRIMARY);
+        table.setBackground(UITheme.SURFACE);
+        table.setRowHeight(38);
+        table.setShowHorizontalLines(true);
+        table.setGridColor(UITheme.BORDER);
 
-        JButton backBtn = new JButton("Back");
-        backBtn.addActionListener(e -> { frame.dispose(); show(); });
+        JTableHeader header = table.getTableHeader();
+        header.setFont(UITheme.FONT_LABEL);
 
-        frame.add(scrollPane, BorderLayout.CENTER);
-        frame.add(backBtn, BorderLayout.SOUTH);
-        frame.setVisible(true);
+        table.getColumnModel().getColumn(5)
+                .setCellRenderer(new DefaultTableCellRenderer() {
+                    public Component getTableCellRendererComponent(
+                            JTable t, Object v, boolean sel, boolean foc, int r, int c) {
+
+                        JLabel l = new JLabel(v.toString());
+                        l.setOpaque(true);
+                        l.setHorizontalAlignment(CENTER);
+
+                        String s = v.toString();
+
+                        if (s.equals("Over Budget")) {
+                            l.setBackground(UITheme.DANGER_SOFT);
+                            l.setForeground(UITheme.DANGER);
+                        } else if (s.equals("Near Limit")) {
+                            l.setBackground(UITheme.WARNING_SOFT);
+                            l.setForeground(UITheme.WARNING);
+                        } else {
+                            l.setBackground(UITheme.SUCCESS_SOFT);
+                            l.setForeground(UITheme.SUCCESS);
+                        }
+
+                        return l;
+                    }
+                });
+
+        return table;
+    }
+
+    private void addBudgetDialog(JFrame parent) {
+        JDialog dialog = new JDialog(parent, "New Budget", true);
+        dialog.setSize(380, 240);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setLayout(new GridBagLayout());
+
+        JPanel card = new JPanel();
+        card.setBackground(UITheme.SURFACE);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JComboBox<String> catBox = new JComboBox<>(CATEGORIES);
+        JTextField limitField = new JTextField();
+
+        JButton saveBtn = new JButton("Save Budget");
+
+        saveBtn.addActionListener(e -> {
+            try {
+                double limit = Double.parseDouble(limitField.getText().trim());
+                if (limit <= 0)
+                    return;
+
+                budgetController.addBudget(
+                        currentUser.getId(),
+                        limit,
+                        (String) catBox.getSelectedItem());
+
+                dialog.dispose();
+                parent.dispose();
+                new BudgetsScreen(currentUser).show();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Invalid input");
+            }
+        });
+
+        card.add(new JLabel("Category"));
+        card.add(catBox);
+        card.add(new JLabel("Limit"));
+        card.add(limitField);
+        card.add(saveBtn);
+
+        dialog.add(card);
+        dialog.setVisible(true);
     }
 }

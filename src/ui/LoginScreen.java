@@ -15,40 +15,68 @@ public class LoginScreen {
     }
 
     public void show() {
-        JFrame frame = new JFrame("Finance Manager — Login");
-        frame.setSize(380, 320);
+
+        JFrame frame = new JFrame("Masroofy — Login");
+        frame.setSize(460, 520);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        frame.getContentPane().setBackground(UITheme.BG);
+        frame.setLayout(new GridBagLayout());
 
-        JTextField emailField    = new JTextField();
-        JPasswordField passField = new JPasswordField();
-        JLabel errorLabel        = new JLabel("");
-        errorLabel.setForeground(Color.RED);
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        frame.add(buildCard(frame));
 
-        panel.add(new JLabel("Email:"));
-        panel.add(emailField);
-        panel.add(new JLabel("Password:"));
-        panel.add(passField);
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
+        frame.setVisible(true);
+    }
+
+    private JPanel buildCard(JFrame frame) {
+
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(UITheme.SURFACE);
+        card.setBorder(UITheme.cardBorder());
+        card.setPreferredSize(new Dimension(380, 420));
+
+        JLabel title = UITheme.label(
+                "Welcome Back",
+                UITheme.FONT_TITLE,
+                UITheme.TEXT_PRIMARY);
+
+        JLabel sub = UITheme.label(
+                "Login to continue",
+                UITheme.FONT_BODY,
+                UITheme.TEXT_SECONDARY);
+
+        JTextField emailField = UITheme.styledField();
+        JPasswordField passField = UITheme.styledPassword();
+
+        JLabel errorLabel = UITheme.label(
+                "",
+                UITheme.FONT_SMALL,
+                UITheme.DANGER);
 
         JButton loginBtn = new JButton("Login");
+        loginBtn.setFont(UITheme.FONT_H3);
+        loginBtn.setBackground(UITheme.PRIMARY);
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFocusPainted(false);
+
         loginBtn.addActionListener(e -> {
-            String email    = emailField.getText().trim();
+
+            String email = emailField.getText().trim();
             String password = new String(passField.getPassword()).trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                errorLabel.setText("Email and password are required.");
+                errorLabel.setText("Email and password required.");
                 return;
             }
 
             User user = authController.handleLogin(email, password);
+
             if (user != null) {
                 frame.dispose();
+
+                // safe call (avoid compile risk)
                 new DashboardScreen(user).show();
             } else {
                 errorLabel.setText("Invalid email or password.");
@@ -57,22 +85,37 @@ public class LoginScreen {
         });
 
         JButton registerBtn = new JButton("Create Account");
+        registerBtn.setFont(UITheme.FONT_SMALL);
+        registerBtn.setForeground(UITheme.PRIMARY);
+        registerBtn.setBorderPainted(false);
+        registerBtn.setContentAreaFilled(false);
+        registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         registerBtn.addActionListener(e -> {
             frame.dispose();
             new RegisterScreen().show();
         });
 
-        panel.add(loginBtn);
-        panel.add(errorLabel);
-        panel.add(registerBtn);
+        // ===== Layout =====
+        card.add(title);
+        card.add(Box.createVerticalStrut(5));
+        card.add(sub);
+        card.add(Box.createVerticalStrut(20));
 
-        JLabel title = new JLabel("Personal Finance Manager", SwingConstants.CENTER);
-        title.setFont(new Font("SansSerif", Font.BOLD, 16));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        card.add(UITheme.fieldGroup("EMAIL", emailField));
+        card.add(Box.createVerticalStrut(12));
 
-        frame.setLayout(new BorderLayout());
-        frame.add(title, BorderLayout.NORTH);
-        frame.add(panel, BorderLayout.CENTER);
-        frame.setVisible(true);
+        card.add(UITheme.fieldGroup("PASSWORD", passField));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(errorLabel);
+        card.add(Box.createVerticalStrut(15));
+
+        card.add(loginBtn);
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(registerBtn);
+
+        return card;
     }
 }

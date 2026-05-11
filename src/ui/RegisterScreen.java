@@ -15,59 +15,93 @@ public class RegisterScreen {
     }
 
     public void show() {
-        JFrame frame = new JFrame("Finance Manager — Register");
-        frame.setSize(400, 420);
+
+        JFrame frame = new JFrame("Masroofy — Create Account");
+        frame.setSize(480, 640);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(9, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
+        frame.getContentPane().setBackground(UITheme.BG);
+        frame.setLayout(new GridBagLayout());
 
-        JTextField nameField     = new JTextField();
-        JTextField emailField    = new JTextField();
-        JPasswordField passField = new JPasswordField();
-        JPasswordField confField = new JPasswordField();
-        JComboBox<String> currencyBox = new JComboBox<>(new String[]{"USD", "EUR", "GBP"});
-        JComboBox<String> langBox     = new JComboBox<>(new String[]{"en", "ar"});
-        JLabel errorLabel = new JLabel("");
-        errorLabel.setForeground(Color.RED);
-        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        frame.add(buildCard(frame));
 
-        panel.add(new JLabel("Name:"));        panel.add(nameField);
-        panel.add(new JLabel("Email:"));       panel.add(emailField);
-        panel.add(new JLabel("Password:"));    panel.add(passField);
-        panel.add(new JLabel("Confirm Pass:")); panel.add(confField);
-        panel.add(new JLabel("Currency:"));    panel.add(currencyBox);
-        panel.add(new JLabel("Language:"));    panel.add(langBox);
-        panel.add(new JLabel(""));             panel.add(new JLabel(""));
+        frame.setVisible(true);
+    }
 
-        JButton registerBtn = new JButton("Register");
+    private JPanel buildCard(JFrame frame) {
+
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(UITheme.SURFACE);
+        card.setBorder(UITheme.cardBorder());
+        card.setPreferredSize(new Dimension(400, 560));
+
+        // ===== Title =====
+        JLabel title = UITheme.label(
+                "Create Account",
+                UITheme.FONT_TITLE,
+                UITheme.TEXT_PRIMARY);
+
+        JLabel sub = UITheme.label(
+                "Start managing your finances",
+                UITheme.FONT_BODY,
+                UITheme.TEXT_SECONDARY);
+
+        // ===== Fields =====
+        JTextField nameField = UITheme.styledField();
+        JTextField emailField = UITheme.styledField();
+        JPasswordField passField = UITheme.styledPassword();
+        JPasswordField confField = UITheme.styledPassword();
+
+        JComboBox<String> currencyBox = UITheme.styledCombo(new String[] { "EGP", "USD", "EUR" });
+
+        JComboBox<String> langBox = UITheme.styledCombo(new String[] { "English", "Arabic" });
+
+        // ===== Error =====
+        JLabel errorLabel = UITheme.label("", UITheme.FONT_SMALL, UITheme.DANGER);
+
+        // ===== Button =====
+        JButton registerBtn = new JButton("Create Account");
+        registerBtn.setFont(UITheme.FONT_H3);
+        registerBtn.setBackground(UITheme.PRIMARY);
+        registerBtn.setForeground(Color.WHITE);
+        registerBtn.setFocusPainted(false);
+
         registerBtn.addActionListener(e -> {
-            String name     = nameField.getText().trim();
-            String email    = emailField.getText().trim();
+
+            String name = nameField.getText().trim();
+            String email = emailField.getText().trim();
             String password = new String(passField.getPassword()).trim();
-            String confirm  = new String(confField.getPassword()).trim();
+            String confirm = new String(confField.getPassword()).trim();
             String currency = (String) currencyBox.getSelectedItem();
-            String language = (String) langBox.getSelectedItem();
+            String language = langBox.getSelectedIndex() == 0 ? "en" : "ar";
 
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 errorLabel.setText("All fields are required.");
                 return;
             }
+
             if (!password.equals(confirm)) {
                 errorLabel.setText("Passwords do not match.");
                 return;
             }
+
             if (password.length() < 6) {
                 errorLabel.setText("Password must be at least 6 characters.");
                 return;
             }
 
-            User user = authController.handleRegister(name, email, password, currency, language);
+            User user = authController.handleRegister(
+                    name, email, password, currency, language);
+
             if (user != null) {
-                JOptionPane.showMessageDialog(frame,
-                        "Registration successful! Please login.",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Registration successful!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+
                 frame.dispose();
                 new LoginScreen().show();
             } else {
@@ -75,20 +109,50 @@ public class RegisterScreen {
             }
         });
 
-        panel.add(registerBtn);
-        panel.add(errorLabel);
+        JButton loginLink = new JButton("Already have an account? Login");
+        loginLink.setFont(UITheme.FONT_SMALL);
+        loginLink.setForeground(UITheme.PRIMARY);
+        loginLink.setBorderPainted(false);
+        loginLink.setContentAreaFilled(false);
+        loginLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel title = new JLabel("Create Account", SwingConstants.CENTER);
-        title.setFont(new Font("SansSerif", Font.BOLD, 16));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        loginLink.addActionListener(e -> {
+            frame.dispose();
+            new LoginScreen().show();
+        });
 
-        frame.setLayout(new BorderLayout());
-        frame.add(title, BorderLayout.NORTH);
-        frame.add(panel, BorderLayout.CENTER);
-        frame.setVisible(true);
-    }
+        // ===== Layout =====
+        card.add(title);
+        card.add(Box.createVerticalStrut(5));
+        card.add(sub);
+        card.add(Box.createVerticalStrut(20));
 
-    private void navigateToLogin() {
-        new LoginScreen().show();
+        card.add(UITheme.fieldGroup("Name", nameField));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(UITheme.fieldGroup("Email", emailField));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(UITheme.fieldGroup("Password", passField));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(UITheme.fieldGroup("Confirm Password", confField));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(UITheme.fieldGroup("Currency", currencyBox));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(UITheme.fieldGroup("Language", langBox));
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(errorLabel);
+        card.add(Box.createVerticalStrut(15));
+
+        card.add(registerBtn);
+        card.add(Box.createVerticalStrut(10));
+
+        card.add(loginLink);
+
+        return card;
     }
 }
