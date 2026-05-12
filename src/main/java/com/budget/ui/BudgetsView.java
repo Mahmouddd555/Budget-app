@@ -11,17 +11,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import java.time.LocalDate;
-import java.util.List;
 
 public class BudgetsView {
     private VBox view;
     private User currentUser;
     private BudgetService budgetService;
-    private TransactionService transactionService;
     private TableView<Budget> tableView;
     private ObservableList<Budget> budgetList;
     private Label totalAllocatedLabel;
@@ -31,7 +27,7 @@ public class BudgetsView {
     public BudgetsView(User user) {
         this.currentUser = user;
         this.budgetService = new BudgetService();
-        this.transactionService = new TransactionService();
+        new TransactionService();
         initializeView();
     }
 

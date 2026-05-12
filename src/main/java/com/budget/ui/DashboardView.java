@@ -15,7 +15,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
@@ -29,10 +28,7 @@ public class DashboardView {
     private VBox view;
     private User currentUser;
     private TransactionService transactionService;
-    private Label balanceCardValue;
-    private Label incomeCardValue;
-    private Label expenseCardValue;
-    private Label savingsCardValue;
+
 
     public DashboardView(User user) {
         this.currentUser = user;

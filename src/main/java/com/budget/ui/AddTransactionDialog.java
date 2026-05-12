@@ -1,7 +1,8 @@
 package com.budget.ui;
 
+import com.budget.models.User;
+import com.budget.service.TransactionService;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -10,9 +11,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import com.budget.models.User;
-import com.budget.service.TransactionService;
-
 import java.time.LocalDate;
 
 public class AddTransactionDialog {

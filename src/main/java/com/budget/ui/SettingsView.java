@@ -1,6 +1,5 @@
 package com.budget.ui;
 
-import com.budget.ui.ThemeManager;
 
 import com.budget.models.User;
 import com.budget.service.TransactionService;
@@ -12,14 +11,11 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+
 
 public class SettingsView {
     private VBox view;

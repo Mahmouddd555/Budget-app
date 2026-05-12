@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import java.time.LocalDate;
 
 public class ReportsView {
     private VBox view;

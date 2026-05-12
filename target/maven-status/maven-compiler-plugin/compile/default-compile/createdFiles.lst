@@ -2,6 +2,7 @@ com\budget\ui\RegisterView.class
 com\budget\database\DatabaseConnection.class
 com\budget\ui\TransactionsView$3.class
 com\budget\models\Goal.class
+com\budget\service\NavigationService.class
 com\budget\ui\BudgetsView$5.class
 com\budget\database\DatabaseInitializer.class
 com\budget\ui\GoalsView.class

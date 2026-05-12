@@ -2,7 +2,6 @@ package com.budget.database;
 
 import com.budget.models.User;
 import java.sql.*;
-import java.time.LocalDateTime;
 
 public class UserDAO {
 

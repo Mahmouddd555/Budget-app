@@ -1,7 +1,6 @@
 package com.budget.ui;
 
 import com.budget.models.User;
-import com.budget.service.TransactionService;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

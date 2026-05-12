@@ -1,7 +1,6 @@
 package com.budget.ui;
 
-import com.budget.database.UserDAO;
-import com.budget.models.User;
+
 import com.budget.service.AuthService;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
@@ -13,12 +12,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+
 
 public class RegisterView {
-    private Button registerButton;
     private VBox view;
     private AuthService authService;
     private TextField usernameField;

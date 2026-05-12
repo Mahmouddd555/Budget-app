@@ -19,7 +19,6 @@ public class GoalsView {
     private VBox view;
     private User currentUser;
     private GoalService goalService;
-    private TableView<Goal> tableView;
     private ObservableList<Goal> goalList;
     private TabPane tabPane;
 
