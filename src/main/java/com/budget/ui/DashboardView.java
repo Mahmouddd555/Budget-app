@@ -15,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
@@ -28,7 +29,10 @@ public class DashboardView {
     private VBox view;
     private User currentUser;
     private TransactionService transactionService;
-
+    private Label balanceCardValue;
+    private Label incomeCardValue;
+    private Label expenseCardValue;
+    private Label savingsCardValue;
 
     public DashboardView(User user) {
         this.currentUser = user;
@@ -39,17 +43,16 @@ public class DashboardView {
     private void initializeView() {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: #f4f6f9; -fx-background: #f4f6f9; -fx-border-color: transparent;");
+        scrollPane.getStyleClass().add("app-scroll");
 
         view = new VBox(20);
         view.setPadding(new Insets(20));
-        view.setStyle("-fx-background-color: #f4f6f9;");
+        view.getStyleClass().add("app-page");
 
         if (currentUser == null) {
             Label errorLabel = new Label("❌ User not logged in!");
             errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 16px;");
             view.getChildren().add(errorLabel);
-            scrollPane.setContent(view);
             scrollPane.setContent(view);
             return;
         }
@@ -57,7 +60,7 @@ public class DashboardView {
         // Welcome Section with animation
         Label welcomeLabel = new Label("Welcome back, " + currentUser.getUsername() + "! 👋");
         welcomeLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 26));
-        welcomeLabel.setStyle("-fx-text-fill: #2c3e50;");
+        welcomeLabel.getStyleClass().add("app-title-welcome");
         FadeTransition fade = new FadeTransition(Duration.millis(500), welcomeLabel);
         fade.setFromValue(0);
         fade.setToValue(1);
@@ -90,13 +93,11 @@ public class DashboardView {
         double balance = currentUser.getTotalBalance();
         double netSavings = totalIncome - totalExpense;
 
-        VBox balanceCard = createStatCard("💰 Total Balance", String.format("$%.2f", balance), "#2ecc71",
+        VBox balanceCard = createStatCard("💰 Total Balance", String.format("$%.2f", balance),
                 balance >= 0 ? "#27ae60" : "#e74c3c");
-        VBox incomeCard = createStatCard("📈 Monthly Income", String.format("$%.2f", totalIncome), "#3498db",
-                "#2980b9");
-        VBox expenseCard = createStatCard("📉 Monthly Expenses", String.format("$%.2f", totalExpense), "#e74c3c",
-                "#c0392b");
-        VBox savingsCard = createStatCard("💎 Net Savings", String.format("$%.2f", netSavings), "#f39c12",
+        VBox incomeCard = createStatCard("📈 Monthly Income", String.format("$%.2f", totalIncome), "#2980b9");
+        VBox expenseCard = createStatCard("📉 Monthly Expenses", String.format("$%.2f", totalExpense), "#c0392b");
+        VBox savingsCard = createStatCard("💎 Net Savings", String.format("$%.2f", netSavings),
                 netSavings >= 0 ? "#27ae60" : "#e74c3c");
 
         grid.add(balanceCard, 0, 0);
@@ -113,28 +114,19 @@ public class DashboardView {
         return grid;
     }
 
-    private VBox createStatCard(String title, String value, String bgColor, String textColor) {
+    private VBox createStatCard(String title, String value, String textColor) {
         VBox card = new VBox(10);
         card.setAlignment(Pos.CENTER);
         card.setPrefHeight(130);
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
+        card.getStyleClass().add("app-panel");
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        titleLabel.getStyleClass().add("app-muted");
 
         Label valueLabel = new Label(value);
         valueLabel.setStyle(String.format("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: %s;", textColor));
 
         card.getChildren().addAll(titleLabel, valueLabel);
-
-        // Hover effect
-        card.setOnMouseEntered(
-                e -> card.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 15; -fx-padding: 15; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 3);"));
-        card.setOnMouseExited(
-                e -> card.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);"));
 
         return card;
     }
@@ -161,11 +153,11 @@ public class DashboardView {
 
     private VBox createPieChart() {
         VBox container = new VBox(10);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15;");
+        container.getStyleClass().add("app-panel");
 
         Label title = new Label("📊 Spending by Category");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("app-section-title");
 
         LocalDate now = LocalDate.now();
         LocalDate startOfMonth = now.withDayOfMonth(1);
@@ -193,11 +185,11 @@ public class DashboardView {
 
     private VBox createBarChart() {
         VBox container = new VBox(10);
-        container.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15;");
+        container.getStyleClass().add("app-panel");
 
         Label title = new Label("📈 Monthly Overview");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("app-section-title");
 
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -238,7 +230,7 @@ public class DashboardView {
         header.setAlignment(Pos.CENTER_LEFT);
         Label sectionTitle = new Label("📝 Recent Transactions");
         sectionTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        sectionTitle.setStyle("-fx-text-fill: #2c3e50;");
+        sectionTitle.getStyleClass().add("app-section-title");
 
         Button viewAllBtn = new Button("View All →");
         viewAllBtn.setStyle(
@@ -250,7 +242,7 @@ public class DashboardView {
         header.getChildren().addAll(sectionTitle, spacer, viewAllBtn);
 
         VBox transactionsList = new VBox(8);
-        transactionsList.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15;");
+        transactionsList.getStyleClass().add("app-panel");
 
         List<Transaction> transactions = transactionService.getUserTransactions(currentUser.getId());
 

@@ -1,6 +1,6 @@
 package com.budget.ui;
 
-import com.budget.service.AuthService;
+import com.budget.controller.LoginController;
 import com.budget.models.User;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
@@ -13,15 +13,17 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+/**
+ * Login layout only; delegates validation and authentication to {@link LoginController}.
+ */
 public class LoginView {
     private VBox view;
-    private AuthService authService;
+    private final LoginController loginController = new LoginController();
     private TextField usernameField;
     private PasswordField passwordField;
     private Label messageLabel;
 
     public LoginView() {
-        this.authService = new AuthService();
         initializeView();
     }
 
@@ -31,7 +33,6 @@ public class LoginView {
         view.setPadding(new Insets(40));
         view.setStyle("-fx-background-color: linear-gradient(to bottom right, #1a1a2e, #16213e, #0f0f1a);");
 
-        // Logo and Title Section with Animation
         VBox headerBox = new VBox(15);
         headerBox.setAlignment(Pos.CENTER);
 
@@ -48,14 +49,11 @@ public class LoginView {
 
         headerBox.getChildren().addAll(logoIcon, title, subtitle);
 
-        // Login Card
         VBox loginCard = new VBox(20);
         loginCard.setMaxWidth(420);
         loginCard.setPadding(new Insets(35));
-        loginCard.setStyle("-fx-background-color: white; -fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 10);");
+        loginCard.getStyleClass().add("login-card");
 
-        // Card Title
         Text loginTitle = new Text("Welcome Back!");
         loginTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
         loginTitle.setFill(Color.web("#2c3e50"));
@@ -66,34 +64,19 @@ public class LoginView {
 
         VBox titleBox = new VBox(5, loginTitle, loginSubtitle);
 
-        // Username Field with Icon
         usernameField = createTextField("👤", "Username");
-
-        // Password Field with Icon
         passwordField = createPasswordField("🔒", "Password");
 
-        // Login Button
         Button loginButton = new Button("Sign In");
-        loginButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; " +
-                "-fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 10; -fx-cursor: hand;");
+        loginButton.getStyleClass().addAll("btn-primary");
         loginButton.setMaxWidth(Double.MAX_VALUE);
         loginButton.setOnAction(e -> handleLogin());
 
-        // Hover effect for button
-        loginButton.setOnMouseEntered(e -> loginButton
-                .setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; " +
-                        "-fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 10; -fx-cursor: hand;"));
-        loginButton.setOnMouseExited(e -> loginButton
-                .setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; " +
-                        "-fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 10; -fx-cursor: hand;"));
-
-        // Message Label
         messageLabel = new Label();
         messageLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 13px;");
         messageLabel.setAlignment(Pos.CENTER);
         messageLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Register Link
         HBox registerBox = new HBox(5);
         registerBox.setAlignment(Pos.CENTER);
         Label noAccountLabel = new Label("Don't have an account?");
@@ -103,7 +86,6 @@ public class LoginView {
         registerLink.setOnAction(e -> MainApp.showRegisterScreen());
         registerBox.getChildren().addAll(noAccountLabel, registerLink);
 
-        // Forgot Password Link
         Hyperlink forgotLink = new Hyperlink("Forgot Password?");
         forgotLink.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 12px;");
         forgotLink.setAlignment(Pos.CENTER_RIGHT);
@@ -113,7 +95,6 @@ public class LoginView {
         loginCard.getChildren().addAll(titleBox, usernameField, passwordField, loginButton, messageLabel, registerBox,
                 forgotLink);
 
-        // Fade animation for card
         FadeTransition fadeTransition = new FadeTransition(Duration.millis(800), loginCard);
         fadeTransition.setFromValue(0);
         fadeTransition.setToValue(1);
@@ -157,31 +138,24 @@ public class LoginView {
     }
 
     private void handleLogin() {
-        String username = usernameField.getText().trim();
-        String password = passwordField.getText();
+        LoginController.AuthResult result = loginController.login(usernameField.getText(), passwordField.getText());
 
-        if (username.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("⚠️ Please fill in all fields");
+        if (!result.isSuccess()) {
+            messageLabel.setStyle("-fx-text-fill: #e74c3c;");
+            messageLabel.setText(result.getMessage() != null ? "⚠️ " + result.getMessage() : "⚠️ Login failed");
             shakeField(messageLabel);
             return;
         }
 
-        if (authService.login(username, password)) {
-            User currentUser = authService.getCurrentUser();
-            messageLabel.setStyle("-fx-text-fill: #27ae60;");
-            messageLabel.setText("✅ Login successful! Redirecting...");
+        User currentUser = result.getUser();
+        messageLabel.setStyle("-fx-text-fill: #27ae60;");
+        messageLabel.setText("Login successful! Redirecting...");
 
-            // Animate and redirect
-            FadeTransition fade = new FadeTransition(Duration.millis(500), view);
-            fade.setFromValue(1);
-            fade.setToValue(0);
-            fade.setOnFinished(e -> MainApp.showMainView(currentUser));
-            fade.play();
-        } else {
-            messageLabel.setStyle("-fx-text-fill: #e74c3c;");
-            messageLabel.setText("❌ Invalid username or password");
-            shakeField(messageLabel);
-        }
+        FadeTransition fade = new FadeTransition(Duration.millis(500), view);
+        fade.setFromValue(1);
+        fade.setToValue(0);
+        fade.setOnFinished(e -> MainApp.showMainView(currentUser));
+        fade.play();
     }
 
     private void showForgotPasswordDialog() {
@@ -193,8 +167,7 @@ public class LoginView {
     }
 
     private void shakeField(javafx.scene.Node node) {
-        javafx.animation.TranslateTransition shake = new javafx.animation.TranslateTransition(Duration.millis(50),
-                node);
+        javafx.animation.TranslateTransition shake = new javafx.animation.TranslateTransition(Duration.millis(50), node);
         shake.setFromX(0);
         shake.setByX(10);
         shake.setCycleCount(6);

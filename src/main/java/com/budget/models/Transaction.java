@@ -13,8 +13,7 @@ public class Transaction {
     private LocalDate date;
     private LocalDateTime createdAt;
 
-    public Transaction() {
-    }
+    public Transaction() {}
 
     public Transaction(int userId, String type, double amount, String category,
             String description, LocalDate date) {

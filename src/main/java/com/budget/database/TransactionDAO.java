@@ -153,46 +153,20 @@ public class TransactionDAO {
         return transactions;
     }
 
-    public double getTotalByTypeAndDateRange(int userId, String type, LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND type = ? AND date BETWEEN ? AND ?";
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = DatabaseConnection.getConnection();
-            if (conn == null)
-                return 0;
-
-            pstmt = conn.prepareStatement(sql);
+    public double getTotalByTypeAndDateRange(int userId, String type, LocalDate start, LocalDate end) {
+        String sql = "SELECT SUM(amount) FROM transactions WHERE user_id = ? AND type = ? AND date BETWEEN ? AND ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             pstmt.setString(2, type);
-            pstmt.setDate(3, Date.valueOf(startDate));
-            pstmt.setDate(4, Date.valueOf(endDate));
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getDouble(1);
-            }
+            pstmt.setDate(3, Date.valueOf(start));
+            pstmt.setDate(4, Date.valueOf(end));
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next() ? rs.getDouble(1) : 0.0;
         } catch (SQLException e) {
-            System.err.println("Error getting total: " + e.getMessage());
-        } finally {
-            if (rs != null)
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                }
-            if (pstmt != null)
-                try {
-                    pstmt.close();
-                } catch (SQLException e) {
-                }
-            if (conn != null)
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                }
+            e.printStackTrace();
+            return 0.0;
         }
-        return 0.0;
     }
 
     public boolean deleteTransaction(int transactionId) {

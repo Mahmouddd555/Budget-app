@@ -2,8 +2,7 @@ package com.budget.ui;
 
 import com.budget.models.User;
 import com.budget.models.Budget;
-import com.budget.service.BudgetService;
-import com.budget.service.TransactionService;
+import com.budget.controller.BudgetController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -11,13 +10,16 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import java.time.LocalDate;
+import java.util.List;
 
 public class BudgetsView {
     private VBox view;
     private User currentUser;
-    private BudgetService budgetService;
+    private final BudgetController budgetController = new BudgetController();
     private TableView<Budget> tableView;
     private ObservableList<Budget> budgetList;
     private Label totalAllocatedLabel;
@@ -26,15 +28,13 @@ public class BudgetsView {
 
     public BudgetsView(User user) {
         this.currentUser = user;
-        this.budgetService = new BudgetService();
-        new TransactionService();
         initializeView();
     }
 
     private void initializeView() {
         view = new VBox(20);
         view.setPadding(new Insets(20));
-        view.setStyle("-fx-background-color: #f4f6f9;");
+        view.getStyleClass().add("app-page");
 
         if (currentUser == null)
             return;
@@ -61,14 +61,13 @@ public class BudgetsView {
 
         Label title = new Label("🎯 Budget Management");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 26));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("app-heading");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label tipLabel = new Label("💡 Tip: Stay within budget to save more!");
-        tipLabel.setStyle(
-                "-fx-background-color: #ecf0f1; -fx-padding: 8 15; -fx-background-radius: 20; -fx-text-fill: #7f8c8d;");
+        tipLabel.getStyleClass().add("app-chip");
 
         header.getChildren().addAll(title, spacer, tipLabel);
         return header;
@@ -111,11 +110,10 @@ public class BudgetsView {
 
     private VBox createStatCard(String title, String value, String color) {
         VBox card = new VBox(10);
-        card.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
+        card.getStyleClass().add("app-panel");
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        titleLabel.getStyleClass().add("app-muted");
 
         VBox valueBox = new VBox();
         valueBox.setAlignment(Pos.CENTER);
@@ -230,8 +228,8 @@ public class BudgetsView {
     }
 
     private void loadBudgets() {
-        budgetList = FXCollections.observableArrayList(budgetService.getUserBudgets(currentUser.getId()));
-        budgetService.updateBudgetsSpending(currentUser.getId(), "MONTHLY");
+        budgetController.refreshSpending(currentUser.getId(), "MONTHLY");
+        budgetList = FXCollections.observableArrayList(budgetController.loadBudgetsForUser(currentUser.getId()));
         tableView.setItems(budgetList);
 
         // Update summary
@@ -288,7 +286,7 @@ public class BudgetsView {
                     double amount = Double.parseDouble(amountField.getText());
                     String period = periodBox.getValue();
                     if (category != null && amount > 0) {
-                        budgetService.createBudget(currentUser.getId(), category, amount, period);
+                        budgetController.createBudget(currentUser.getId(), category, amount, period);
                         loadBudgets();
                     }
                 } catch (NumberFormatException ignored) {
@@ -306,7 +304,7 @@ public class BudgetsView {
         alert.setContentText("Delete budget for " + budget.getCategory() + "?");
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                budgetService.deleteBudget(budget.getId());
+                budgetController.deleteBudget(budget.getId());
                 loadBudgets();
             }
         });

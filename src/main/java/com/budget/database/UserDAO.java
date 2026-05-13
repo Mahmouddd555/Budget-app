@@ -2,6 +2,7 @@ package com.budget.database;
 
 import com.budget.models.User;
 import java.sql.*;
+import java.time.LocalDateTime;
 
 public class UserDAO {
 
@@ -75,6 +76,55 @@ public class UserDAO {
             }
         } catch (SQLException e) {
             System.err.println("❌ Error getting user: " + e.getMessage());
+        } finally {
+            if (rs != null)
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                }
+            if (pstmt != null)
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                }
+            if (conn != null)
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+        }
+        return null;
+    }
+
+    /** Loads a user by primary key (used to refresh balance after transactions). */
+    public User getUserById(int userId) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn == null)
+                return null;
+
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, userId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPasswordHash(rs.getString("password_hash"));
+                user.setTotalBalance(rs.getDouble("total_balance"));
+                user.setMonthlyIncome(rs.getDouble("monthly_income"));
+                user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                return user;
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Error getting user by id: " + e.getMessage());
         } finally {
             if (rs != null)
                 try {

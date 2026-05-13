@@ -2,7 +2,7 @@ package com.budget.ui;
 
 import com.budget.models.User;
 import com.budget.models.Transaction;
-import com.budget.service.TransactionService;
+import com.budget.controller.TransactionController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -19,7 +19,7 @@ import java.util.List;
 public class TransactionsView {
     private VBox view;
     private User currentUser;
-    private TransactionService transactionService;
+    private final TransactionController transactionController = new TransactionController();
     private TableView<Transaction> tableView;
     private ObservableList<Transaction> transactionList;
     private ComboBox<String> periodFilter;
@@ -31,14 +31,13 @@ public class TransactionsView {
 
     public TransactionsView(User user) {
         this.currentUser = user;
-        this.transactionService = new TransactionService();
         initializeView();
     }
 
     private void initializeView() {
         view = new VBox(20);
         view.setPadding(new Insets(20));
-        view.setStyle("-fx-background-color: #f4f6f9;");
+        view.getStyleClass().add("app-page");
 
         if (currentUser == null)
             return;
@@ -59,14 +58,13 @@ public class TransactionsView {
 
         Label title = new Label("💰 Transactions");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 26));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("app-heading");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label statsLabel = new Label("📊 All your financial activity");
-        statsLabel.setStyle(
-                "-fx-background-color: #ecf0f1; -fx-padding: 8 15; -fx-background-radius: 20; -fx-text-fill: #7f8c8d;");
+        statsLabel.getStyleClass().add("app-chip");
 
         header.getChildren().addAll(title, spacer, statsLabel);
         return header;
@@ -205,78 +203,39 @@ public class TransactionsView {
     }
 
     private void loadTransactions() {
-        List<Transaction> transactions = transactionService.getUserTransactions(currentUser.getId());
+        List<Transaction> transactions = transactionController.loadAllTransactions(currentUser.getId());
 
         String period = periodFilter.getValue();
         LocalDate now = LocalDate.now();
-        LocalDate finalStartDate;
+        LocalDate finalStartDate = transactionController.resolvePeriodStart(period, now);
 
-        switch (period) {
-            case "Today":
-                finalStartDate = now;
-                break;
-            case "This Week":
-                finalStartDate = now.minusWeeks(1);
-                break;
-            case "This Month":
-                finalStartDate = now.withDayOfMonth(1);
-                break;
-            case "This Year":
-                finalStartDate = now.withDayOfYear(1);
-                break;
-            default:
-                finalStartDate = LocalDate.of(2000, 1, 1);
-        }
-
-        List<Transaction> filtered = transactions.stream()
-                .filter(t -> !t.getDate().isBefore(finalStartDate))
-                .toList();
+        List<Transaction> filtered = transactionController.filterByPeriod(transactions, finalStartDate);
 
         transactionList = FXCollections.observableArrayList(filtered);
         filterTransactions();
     }
 
     private void filterTransactions() {
-        String searchText = searchField.getText().toLowerCase();
-        String type = typeFilter.getValue();
-
         ObservableList<Transaction> filtered = FXCollections.observableArrayList(
-                transactionList.stream()
-                        .filter(t -> type.equals("All") || t.getType().equals(type.toUpperCase()))
-                        .filter(t -> searchText.isEmpty() ||
-                                t.getCategory().toLowerCase().contains(searchText) ||
-                                t.getDescription().toLowerCase().contains(searchText))
-                        .toList());
+                transactionController.applySearchAndType(transactionList, typeFilter.getValue(), searchField.getText()));
 
         tableView.setItems(filtered);
         updateSummary(filtered);
     }
 
     private void updateSummary(ObservableList<Transaction> transactions) {
-        double totalIncome = transactions.stream()
-                .filter(t -> t.getType().equals("INCOME"))
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-
-        double totalExpense = transactions.stream()
-                .filter(t -> t.getType().equals("EXPENSE"))
-                .mapToDouble(Transaction::getAmount)
-                .sum();
-
-        double net = totalIncome - totalExpense;
-
-        totalIncomeLabel.setText(String.format("$%.2f", totalIncome));
-        totalExpenseLabel.setText(String.format("$%.2f", totalExpense));
-        netLabel.setText(String.format("$%.2f", net));
-        netLabel.setStyle(net >= 0 ? "-fx-text-fill: #27ae60; -fx-font-weight: bold;"
+        TransactionController.Summary s = transactionController.summarize(transactions);
+        totalIncomeLabel.setText(String.format("$%.2f", s.totalIncome()));
+        totalExpenseLabel.setText(String.format("$%.2f", s.totalExpense()));
+        netLabel.setText(String.format("$%.2f", s.net()));
+        netLabel.setStyle(s.net() >= 0 ? "-fx-text-fill: #27ae60; -fx-font-weight: bold;"
                 : "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
     }
 
     private HBox createSummaryBar() {
         HBox summaryBox = new HBox(20);
         summaryBox.setPadding(new Insets(15));
-        summaryBox.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
+        summaryBox.getStyleClass().add("app-panel");
         summaryBox.setAlignment(Pos.CENTER);
 
         VBox incomeBox = new VBox(5);
@@ -319,7 +278,10 @@ public class TransactionsView {
         Button addBtn = new Button("➕ Add Transaction");
         addBtn.setStyle(
                 "-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
-        addBtn.setOnAction(e -> AddTransactionDialog.show(currentUser, this::loadTransactions));
+        addBtn.setOnAction(e -> AddTransactionDialog.show(currentUser, () -> {
+            loadTransactions();
+            MainApp.refreshAfterDataChange();
+        }));
 
         Button exportBtn = new Button("📥 Export CSV");
         exportBtn.setStyle(
@@ -338,8 +300,9 @@ public class TransactionsView {
 
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                transactionService.deleteTransaction(t.getId(), currentUser.getId());
+                transactionController.deleteTransaction(t.getId(), currentUser.getId());
                 loadTransactions();
+                MainApp.refreshAfterDataChange();
                 showAlert("Success", "Transaction deleted successfully!");
             }
         });
@@ -347,18 +310,7 @@ public class TransactionsView {
 
     private void exportToCSV() {
         try {
-            java.io.FileWriter writer = new java.io.FileWriter("transactions_export.csv");
-            writer.append("ID,Type,Amount,Category,Description,Date\n");
-            for (Transaction t : tableView.getItems()) {
-                writer.append(t.getId() + ",");
-                writer.append(t.getType() + ",");
-                writer.append(t.getAmount() + ",");
-                writer.append(t.getCategory() + ",");
-                writer.append(t.getDescription() + ",");
-                writer.append(t.getDate().toString() + "\n");
-            }
-            writer.flush();
-            writer.close();
+            transactionController.exportToCsv(new java.util.ArrayList<>(tableView.getItems()), "transactions_export.csv");
             showAlert("Success", "Exported to transactions_export.csv in project folder!");
         } catch (Exception e) {
             showAlert("Error", "Export failed: " + e.getMessage());

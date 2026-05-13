@@ -1,7 +1,6 @@
 package com.budget.ui;
 
-
-import com.budget.service.AuthService;
+import com.budget.controller.RegisterController;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,19 +12,19 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-
 public class RegisterView {
     private VBox view;
-    private AuthService authService;
+    private final RegisterController registerController = new RegisterController();
     private TextField usernameField;
     private TextField emailField;
     private PasswordField passwordField;
     private PasswordField confirmPasswordField;
+    private ComboBox<String> currencyCombo;
+    private ComboBox<String> languageCombo;
     private Label messageLabel;
     private ProgressIndicator progressIndicator;
 
     public RegisterView() {
-        this.authService = new AuthService();
         initializeView();
     }
 
@@ -54,10 +53,9 @@ public class RegisterView {
 
         // Register Card
         VBox registerCard = new VBox(20);
-        registerCard.setMaxWidth(450);
+        registerCard.setMaxWidth(480);
         registerCard.setPadding(new Insets(35));
-        registerCard.setStyle("-fx-background-color: white; -fx-background-radius: 20; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 10);");
+        registerCard.getStyleClass().add("register-card");
 
         // Card Title
         Text registerTitle = new Text("Sign Up");
@@ -75,6 +73,33 @@ public class RegisterView {
         emailField = createTextField("📧", "Email");
         passwordField = createPasswordField("🔒", "Password");
         confirmPasswordField = createPasswordField("✓", "Confirm Password");
+
+        // Regional preferences (saved with account setup via app preferences)
+        Label prefsHint = new Label("Display preferences");
+        prefsHint.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+        prefsHint.setTextFill(Color.web("#2c3e50"));
+
+        Label currencyLabel = new Label("💱 Currency");
+        currencyLabel.setMinWidth(110);
+        currencyLabel.setStyle("-fx-text-fill: #2c3e50;");
+        currencyCombo = new ComboBox<>();
+        currencyCombo.getItems().addAll("USD ($)", "EUR (€)", "EGP (£)", "GBP (£)", "JPY (¥)", "CAD ($)", "AUD ($)");
+        currencyCombo.setStyle("-fx-padding: 8; -fx-background-radius: 8;");
+        syncCurrencyComboFromPrefs();
+        HBox currencyRow = new HBox(12, currencyLabel, currencyCombo);
+        currencyRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(currencyCombo, Priority.ALWAYS);
+
+        Label languageLabel = new Label("🌐 Language");
+        languageLabel.setMinWidth(110);
+        languageLabel.setStyle("-fx-text-fill: #2c3e50;");
+        languageCombo = new ComboBox<>();
+        languageCombo.getItems().addAll("English (EN)", "العربية (AR)");
+        languageCombo.setStyle("-fx-padding: 8; -fx-background-radius: 8;");
+        syncLanguageComboFromPrefs();
+        HBox languageRow = new HBox(12, languageLabel, languageCombo);
+        languageRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(languageCombo, Priority.ALWAYS);
 
         // Password strength indicator
         ProgressBar strengthBar = new ProgressBar(0);
@@ -144,7 +169,7 @@ public class RegisterView {
         loginBox.getChildren().addAll(haveAccountLabel, loginLink);
 
         registerCard.getChildren().addAll(titleBox, usernameField, emailField, passwordField,
-                confirmPasswordField, passwordStrengthBox, buttonBox,
+                confirmPasswordField, prefsHint, currencyRow, languageRow, passwordStrengthBox, buttonBox,
                 messageLabel, loginBox);
 
         // Fade animation
@@ -190,6 +215,23 @@ public class RegisterView {
         return field;
     }
 
+    private void syncCurrencyComboFromPrefs() {
+        String sym = SettingsManager.getCurrency();
+        if ("€".equals(sym)) {
+            currencyCombo.setValue("EUR (€)");
+        } else if ("£".equals(sym)) {
+            currencyCombo.setValue("GBP (£)");
+        } else if ("¥".equals(sym)) {
+            currencyCombo.setValue("JPY (¥)");
+        } else {
+            currencyCombo.setValue("USD ($)");
+        }
+    }
+
+    private void syncLanguageComboFromPrefs() {
+        languageCombo.setValue("AR".equals(SettingsManager.getLanguage()) ? "العربية (AR)" : "English (EN)");
+    }
+
     private int calculatePasswordStrength(String password) {
         int strength = 0;
         if (password.length() >= 8)
@@ -206,36 +248,22 @@ public class RegisterView {
     }
 
     private void handleRegister() {
-        String username = usernameField.getText().trim();
-        String email = emailField.getText().trim();
-        String password = passwordField.getText();
-        String confirm = confirmPasswordField.getText();
+        RegisterController.RegisterResult result = registerController.register(
+                usernameField.getText(),
+                emailField.getText(),
+                passwordField.getText(),
+                confirmPasswordField.getText());
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("⚠️ Please fill in all fields");
-            return;
-        }
-
-        if (!password.equals(confirm)) {
-            messageLabel.setText("⚠️ Passwords do not match");
-            return;
-        }
-
-        if (password.length() < 4) {
-            messageLabel.setText("⚠️ Password must be at least 4 characters");
-            return;
-        }
-
-        boolean success = authService.register(username, email, password);
-
-        if (success) {
-            messageLabel.setStyle("-fx-text-fill: #27ae60;");
-            messageLabel.setText("✅ Registration successful! Redirecting...");
-            MainApp.showLoginScreen();
-        } else {
+        if (!result.isSuccess()) {
             messageLabel.setStyle("-fx-text-fill: #e74c3c;");
-            messageLabel.setText("❌ Username or email already exists!");
+            messageLabel.setText(result.getMessage() != null ? result.getMessage() : "Registration failed");
+            return;
         }
+
+        registerController.applyRegionalPreferences(currencyCombo.getValue(), languageCombo.getValue());
+        messageLabel.setStyle("-fx-text-fill: #27ae60;");
+        messageLabel.setText("Registration successful! Redirecting...");
+        MainApp.showLoginScreen();
     }
 
     private void shakeField(javafx.scene.Node field) {

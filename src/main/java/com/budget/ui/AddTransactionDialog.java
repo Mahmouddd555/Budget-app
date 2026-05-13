@@ -1,18 +1,21 @@
 package com.budget.ui;
 
+import com.budget.controller.TransactionController;
 import com.budget.models.User;
-import com.budget.service.TransactionService;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
+
 import java.time.LocalDate;
 
+/**
+ * Modal form for adding a transaction; delegates persistence to {@link TransactionController}.
+ */
 public class AddTransactionDialog {
 
     public static void show(User currentUser, Runnable onSuccess) {
@@ -20,60 +23,51 @@ public class AddTransactionDialog {
         dialog.setTitle("Add Transaction");
         dialog.setHeaderText(null);
 
-        // Custom dialog content
+        TransactionController controller = new TransactionController();
+
         VBox content = new VBox(15);
         content.setPadding(new Insets(20));
-        content.setStyle("-fx-background-color: white;");
+        content.getStyleClass().add("app-panel");
 
-        Text title = new Text("➕ New Transaction");
+        Label title = new Label("New Transaction");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        title.setFill(Color.web("#2c3e50"));
+        title.getStyleClass().add("app-section-title");
 
-        // Form fields
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(15);
 
-        // Type selection
         Label typeLabel = new Label("Type:");
-        typeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        typeLabel.getStyleClass().add("app-heading");
         ToggleGroup typeGroup = new ToggleGroup();
-        RadioButton incomeRadio = new RadioButton("💰 Income");
-        RadioButton expenseRadio = new RadioButton("💸 Expense");
+        RadioButton incomeRadio = new RadioButton("Income");
+        RadioButton expenseRadio = new RadioButton("Expense");
         incomeRadio.setToggleGroup(typeGroup);
         expenseRadio.setToggleGroup(typeGroup);
         expenseRadio.setSelected(true);
         HBox typeBox = new HBox(15, incomeRadio, expenseRadio);
 
-        // Amount field
         Label amountLabel = new Label("Amount:");
-        amountLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        amountLabel.getStyleClass().add("app-heading");
         TextField amountField = new TextField();
         amountField.setPromptText("0.00");
-        amountField.setStyle("-fx-padding: 8; -fx-border-radius: 8; -fx-border-color: #ddd;");
 
-        // Category
         Label categoryLabel = new Label("Category:");
-        categoryLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        categoryLabel.getStyleClass().add("app-heading");
         ComboBox<String> categoryBox = new ComboBox<>();
         categoryBox.getItems().addAll("Food", "Transport", "Shopping", "Entertainment",
                 "Bills", "Healthcare", "Education", "Salary",
                 "Freelance", "Investment", "Other");
         categoryBox.setValue("Food");
-        categoryBox.setStyle("-fx-padding: 5;");
 
-        // Description
         Label descLabel = new Label("Description:");
-        descLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        descLabel.getStyleClass().add("app-heading");
         TextField descField = new TextField();
         descField.setPromptText("Optional");
-        descField.setStyle("-fx-padding: 8; -fx-border-radius: 8; -fx-border-color: #ddd;");
 
-        // Date
         Label dateLabel = new Label("Date:");
-        dateLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        dateLabel.getStyleClass().add("app-heading");
         DatePicker datePicker = new DatePicker(LocalDate.now());
-        datePicker.setStyle("-fx-padding: 5;");
 
         grid.add(typeLabel, 0, 0);
         grid.add(typeBox, 1, 0);
@@ -86,15 +80,14 @@ public class AddTransactionDialog {
         grid.add(dateLabel, 0, 4);
         grid.add(datePicker, 1, 4);
 
-        // Update categories based on type
         incomeRadio.selectedProperty().addListener((obs, old, newVal) -> {
-            if (newVal) {
+            if (Boolean.TRUE.equals(newVal)) {
                 categoryBox.getItems().setAll("Salary", "Freelance", "Investment", "Gift", "Other");
                 categoryBox.setValue("Salary");
             }
         });
         expenseRadio.selectedProperty().addListener((obs, old, newVal) -> {
-            if (newVal) {
+            if (Boolean.TRUE.equals(newVal)) {
                 categoryBox.getItems().setAll("Food", "Transport", "Shopping", "Entertainment",
                         "Bills", "Healthcare", "Education", "Other");
                 categoryBox.setValue("Food");
@@ -105,40 +98,44 @@ public class AddTransactionDialog {
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        // Style buttons
         Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
-        okButton.setStyle(
-                "-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 8; -fx-cursor: hand;");
+        okButton.getStyleClass().add("btn-primary");
         Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        cancelButton.setStyle(
-                "-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 8 20; -fx-background-radius: 8; -fx-cursor: hand;");
+        cancelButton.getStyleClass().add("btn-danger");
 
         dialog.setResultConverter(buttonType -> {
-            if (buttonType == ButtonType.OK) {
-                try {
-                    String type = incomeRadio.isSelected() ? "INCOME" : "EXPENSE";
-                    double amount = Double.parseDouble(amountField.getText());
-                    String category = categoryBox.getValue();
-                    String description = descField.getText().isEmpty() ? "-" : descField.getText();
-                    LocalDate date = datePicker.getValue();
+            if (buttonType != ButtonType.OK) {
+                return null;
+            }
+            try {
+                String type = incomeRadio.isSelected() ? "INCOME" : "EXPENSE";
+                double amount = Double.parseDouble(amountField.getText());
+                String category = categoryBox.getValue();
+                String description = descField.getText().isEmpty() ? "-" : descField.getText();
+                LocalDate date = datePicker.getValue();
 
-                    if (amount <= 0) {
-                        showAlert("Error", "Amount must be greater than 0!");
-                        return null;
-                    }
-
-                    TransactionService transactionService = new TransactionService();
-                    boolean success = transactionService.addTransaction(currentUser.getId(), type, amount, category,
-                            description, date);
-
-                    if (success && onSuccess != null) {
-                        onSuccess.run();
-                        MainApp.refreshDashboard();
-                        showAlert("Success", "Transaction added successfully!");
-                    }
-                } catch (NumberFormatException e) {
-                    showAlert("Error", "Please enter a valid amount!");
+                if (amount <= 0) {
+                    Platform.runLater(() -> showAlert("Error", "Amount must be greater than 0!"));
+                    return null;
                 }
+                if (date == null) {
+                    Platform.runLater(() -> showAlert("Error", "Please select a date."));
+                    return null;
+                }
+
+                boolean success = controller.addTransaction(currentUser.getId(), type, amount, category, description,
+                        date);
+                if (success) {
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                    MainApp.refreshAfterDataChange();
+                    Platform.runLater(() -> showAlert("Success", "Transaction added successfully!"));
+                } else {
+                    Platform.runLater(() -> showAlert("Error", "Could not save transaction."));
+                }
+            } catch (NumberFormatException e) {
+                Platform.runLater(() -> showAlert("Error", "Please enter a valid amount!"));
             }
             return null;
         });

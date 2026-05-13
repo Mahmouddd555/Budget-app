@@ -2,7 +2,7 @@ package com.budget.ui;
 
 import com.budget.models.User;
 import com.budget.models.Goal;
-import com.budget.service.GoalService;
+import com.budget.controller.GoalController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -18,20 +18,20 @@ import java.time.format.DateTimeFormatter;
 public class GoalsView {
     private VBox view;
     private User currentUser;
-    private GoalService goalService;
+    private final GoalController goalController = new GoalController();
+    private TableView<Goal> tableView;
     private ObservableList<Goal> goalList;
     private TabPane tabPane;
 
     public GoalsView(User user) {
         this.currentUser = user;
-        this.goalService = new GoalService();
         initializeView();
     }
 
     private void initializeView() {
         view = new VBox(20);
         view.setPadding(new Insets(20));
-        view.setStyle("-fx-background-color: #f4f6f9;");
+        view.getStyleClass().add("app-page");
 
         if (currentUser == null)
             return;
@@ -68,14 +68,13 @@ public class GoalsView {
 
         Label title = new Label("🏆 Financial Goals");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 26));
-        title.setStyle("-fx-text-fill: #2c3e50;");
+        title.getStyleClass().add("app-heading");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label tipLabel = new Label("💡 Set goals and track your progress!");
-        tipLabel.setStyle(
-                "-fx-background-color: #ecf0f1; -fx-padding: 8 15; -fx-background-radius: 20; -fx-text-fill: #7f8c8d;");
+        tipLabel.getStyleClass().add("app-chip");
 
         header.getChildren().addAll(title, spacer, tipLabel);
         return header;
@@ -112,12 +111,11 @@ public class GoalsView {
 
     private VBox createStatCard(String title, String value, String color) {
         VBox card = new VBox(10);
-        card.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
+        card.getStyleClass().add("app-panel");
         card.setAlignment(Pos.CENTER);
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        titleLabel.getStyleClass().add("app-muted");
 
         Label valueLabel = new Label(value);
         valueLabel.setStyle(String.format("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: %s;", color));
@@ -127,7 +125,7 @@ public class GoalsView {
     }
 
     private void loadGoals() {
-        goalList = FXCollections.observableArrayList(goalService.getUserGoals(currentUser.getId()));
+        goalList = FXCollections.observableArrayList(goalController.loadGoals(currentUser.getId()));
     }
 
     private TableView<Goal> createGoalsTable(String status) {
@@ -280,7 +278,7 @@ public class GoalsView {
                     double target = Double.parseDouble(targetField.getText());
                     LocalDate targetDate = datePicker.getValue();
                     if (!name.isEmpty() && target > 0) {
-                        goalService.createGoal(currentUser.getId(), name, target, targetDate);
+                        goalController.createGoal(currentUser.getId(), name, target, targetDate);
                         refreshView();
                     }
                 } catch (NumberFormatException ignored) {
@@ -317,9 +315,9 @@ public class GoalsView {
                 try {
                     double amount = Double.parseDouble(amountField.getText());
                     double newSaved = goal.getSavedAmount() + amount;
-                    goalService.updateSavedAmount(goal.getId(), newSaved);
+                    goalController.updateSavedAmount(goal.getId(), newSaved);
                     if (newSaved >= goal.getTargetAmount()) {
-                        goalService.updateGoalStatus(goal.getId(), "ACHIEVED");
+                        goalController.updateGoalStatus(goal.getId(), "ACHIEVED");
                     }
                     refreshView();
                 } catch (NumberFormatException ignored) {
@@ -337,7 +335,7 @@ public class GoalsView {
         alert.setContentText("Delete goal: " + goal.getName() + "?");
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                goalService.deleteGoal(goal.getId());
+                goalController.deleteGoal(goal.getId());
                 refreshView();
             }
         });

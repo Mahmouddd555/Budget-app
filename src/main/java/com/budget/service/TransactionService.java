@@ -99,11 +99,13 @@ public class TransactionService {
         double balance = 0;
 
         for (Transaction t : allTransactions) {
-            if (t.getType().equals("INCOME")) {
+            String type = t.getType();
+            if ("INCOME".equals(type)) {
                 balance += t.getAmount();
-            } else {
+            } else if ("EXPENSE".equals(type)) {
                 balance -= t.getAmount();
             }
+            // Ignore unknown types rather than treating them as expense
         }
 
         userDAO.updateUserBalance(userId, balance);

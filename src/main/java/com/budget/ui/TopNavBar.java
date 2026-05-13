@@ -11,53 +11,53 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Top navigation layout; balance text is updated via {@link #updateBalance(double)} after data changes.
+ */
 public class TopNavBar {
-    private HBox view;
-    private User currentUser;
-    private Label titleLabel;
-    private Label dateLabel;
+    private final HBox view;
+    private final User currentUser;
+    private final Label titleLabel;
+    private final Label dateLabel;
     private Label balanceLabel;
 
     public TopNavBar(User user) {
         this.currentUser = user;
-        initializeView();
-    }
-
-    private void initializeView() {
         view = new HBox(15);
         view.setPadding(new Insets(15, 25, 15, 25));
         view.setAlignment(Pos.CENTER_LEFT);
-        view.setStyle("-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 1);");
+        view.getStyleClass().add("top-navbar");
 
         titleLabel = new Label("Dashboard");
         titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
-        titleLabel.setStyle("-fx-text-fill: #2c3e50;");
+        titleLabel.getStyleClass().add("top-navbar-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Current date
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy"));
         dateLabel = new Label("📅 " + today);
-        dateLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 13px;");
+        dateLabel.getStyleClass().add("top-navbar-date");
 
-        // Balance if logged in
         if (currentUser != null) {
-            double balance = currentUser.getTotalBalance();
-            balanceLabel = new Label(String.format("💰 Balance: $%.2f", balance));
-            balanceLabel.setStyle(
-                    "-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 0 15 0 15;");
+            balanceLabel = new Label(formatBalance(currentUser.getTotalBalance()));
+            balanceLabel.getStyleClass().add("top-navbar-balance");
 
             Label userLabel = new Label("👤 " + currentUser.getUsername());
-            userLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold; -fx-font-size: 14px;");
+            userLabel.getStyleClass().add("top-navbar-user");
 
             view.getChildren().addAll(titleLabel, spacer, dateLabel, balanceLabel, userLabel);
         } else {
             view.getChildren().addAll(titleLabel, spacer, dateLabel);
         }
+    }
+
+    private static String formatBalance(double balance) {
+        return "💰 Balance: " + SettingsManager.formatMoney(balance);
     }
 
     public void updateTitle(String title) {
@@ -70,7 +70,7 @@ public class TopNavBar {
 
     public void updateBalance(double newBalance) {
         if (balanceLabel != null) {
-            balanceLabel.setText(String.format("💰 Balance: $%.2f", newBalance));
+            balanceLabel.setText(formatBalance(newBalance));
         }
     }
 

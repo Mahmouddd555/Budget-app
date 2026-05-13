@@ -5,9 +5,7 @@ import com.budget.service.AuthService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -32,8 +30,7 @@ public class SideBar {
         view = new VBox(12);
         view.setPadding(new Insets(25, 15, 25, 15));
         view.setPrefWidth(260);
-        view.setStyle("-fx-background-color: linear-gradient(to bottom, #1a1a2e, #0f0f1a);");
-        view.setEffect(new DropShadow(5, Color.rgb(0, 0, 0, 0.3)));
+        view.getStyleClass().add("app-sidebar");
 
         // Logo Section
         VBox logoBox = new VBox(5);
