@@ -4,6 +4,7 @@ import com.budget.models.User;
 import com.budget.service.AuthService;
 
 /**
+
  * Handles authentication use-cases for the login screen (no JavaFX dependencies).
  */
 public class LoginController {
